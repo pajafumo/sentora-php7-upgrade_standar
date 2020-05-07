@@ -89,12 +89,12 @@ fi
 
 	echo -e "\nDetected PHP: $PHPVER "
 
-	if  [[ "$PHPVER" = "7.3" ]]; then
-    	echo -e "\nPHP 7.3 installed. Procced installing ..."
-	else
-		echo -e "\nPHP 7.3 not installed. Exiting installer. Please contact script admin"
-		exit 1
-	fi
+#	if  [[ "$PHPVER" = "7.3" ]]; then
+#    	echo -e "\nPHP 7.3 installed. Procced installing ..."
+#	else
+#		echo -e "\nPHP 7.3 not installed. Exiting installer. Please contact script admin"
+#		exit 1
+#	fi
 
 # -------------------------------------------------------------------------------
 
@@ -236,10 +236,7 @@ done
 	# -------------------------------------------------------------------------------
 	# FAIL2BAN Below
 	# -------------------------------------------------------------------------------
-	
-	# Install Fail2ban (will add full code later) for now use my github repo code.
-	echo -e "\nInstalling Fail2ban ..."
-	bash <(curl -L -Ss http://zppy-repo.dukecitysolutions.com/repo/fail2ban/sentora-fail2ban.sh)
+
 	
 	# -------------------------------------------------------------------------------
 	# MYSQL Below
@@ -457,39 +454,6 @@ done
 	# Start all OS Sentora php 7.3 config update
 	# -------------------------------------------------------------------------------
 	
-	if [[ "$OS" = "CentOs" && ( "$VER" = "6" || "$VER" = "7" ) ]]; then
-	
-		## Setup PHP 7.3 new PHP.INI file shipped with PHP and rename old PHP.INI
-		file="/etc/php.ini.OLD"
-		if [ ! -f "$file" ]; then
-			mv /etc/php.ini /etc/php.ini.OLD
-			cp -r /etc/php.ini.rpmnew /etc/php.ini
-		fi
-	
-		# Pass php.ini.OLD Date.timezone over to new PHP.ini
-		TIMEZONE=$(cat /etc/php.ini.OLD | grep "date.timezone =" | sed -s "s|.*date.timezone \= '\(.*\)';.*|\1|")
-		sed -i 's|;date.timezone =|'"$TIMEZONE"'|g' /etc/php.ini
-		
-		# Fix missing php.ini settings sentora needs
-		echo -e "\nFix missing php.ini settings sentora needs in CentOS 6.x php 7.3 ..."
-		echo "setting upload_tmp_dir = /var/sentora/temp/"
-		echo ""
-		sed -i 's|;upload_tmp_dir =|upload_tmp_dir = /var/sentora/temp/|g' /etc/php.ini
-		echo "Setting session.save_path = /var/sentora/sessions"
-		sed -i 's|;session.save_path = "/tmp"|session.save_path = "/var/sentora/sessions"|g' /etc/php.ini
-	
-		# Curl CERT Setup in PHP.ini files
-		echo -e "\nSetting up PHP.ini curl CERT..."
-		wget https://curl.haxx.se/ca/cacert.pem
-		mkdir -p /etc/php.d/curl_cert
-		mv cacert.pem /etc/php.d/curl_cert/cacert.pem
-		sed -i 's|;curl.cainfo =|curl.cainfo = "/etc/php.d/curl_cert/cacert.pem"|g' /etc/php.ini
-		sed -i 's|;openssl.cafile=|openssl.cafile = "/etc/php.d/curl_cert/cacert.pem"|g' /etc/php.ini
-		
-		# Add missing php-zip module for zppy error etc
-		yum -y --enablerepo=remi-php73 install php-zip
-						
-	fi
 	
 	# ----------------------------------------------------------------------------------
 	
