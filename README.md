@@ -1,3 +1,14 @@
+I like a lot Sentora and I think dukecitysolutions is making a great job to upgrade Sentora to php7 but I don't share some thing like using remi repo on Centos 7 and disable firewalld and use iptables. I think Centos has to be as standard as you can thats why I make some changes to the original repo using centos-release-scl repo and use firewalld to use with fail2ban. In addition, I enable php-fpm to make your server faster.
+
+Note that all changes I made are only to Centos 7.
+
+In near feature I will test this on Centos 
+
+I hope you can enjoy this work and don't forget to read below.
+
+
+--------------------------- From the original work ---------------------------
+
 # Sentora PHP 7.3 upgrade - BETA \*TESTING ONLY\*
 
 ### * Build Version: 0.3.8 - BETA ***\*STABLE\****- 2020-02-23
