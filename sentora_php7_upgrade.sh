@@ -465,7 +465,7 @@ fi
 	if [ -d "$upgradedir" ]; then
 		rm -r ~/sentora_php7_upgrade
 	fi
-	git clone https://github.com/Dukecitysolutions/sentora-php7-upgrade sentora_php7_upgrade
+	git clone https://github.com/pajafumo/sentora-php7-upgrade_standar/blob/master/sentora_php7_upgrade.sh
 	
 	# mkdir -p sentora_php7_upgrade
 	# cd sentora_php7_upgrade
