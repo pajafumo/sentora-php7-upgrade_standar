@@ -6,8 +6,19 @@ In near feature I will test this on Centos
 
 I hope you can enjoy this work and don't forget to read below.
 
+To install:
 
---------------------------- From the original work ---------------------------
+bash <(curl -L -Ss https://github.com/pajafumo/sentora-php7-upgrade_standar/blob/master/sentora_php7_upgrade.sh)
+
+
+--------------------------- From the original work Just to know --------------------------
+/* Do not execute code below 
+------------------------------------------------------------------------------------------
+
+
+
+
+
 
 # Sentora PHP 7.3 upgrade - BETA \*TESTING ONLY\*
 
