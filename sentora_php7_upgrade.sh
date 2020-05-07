@@ -208,65 +208,58 @@ if [[ "$OS" = "CentOs" ]]; then
 	# -------------------------------------------------------------------------------
 	echo -e "\nStarting PHP 7.3 with Packages update on Centos 7.*"	
 	# -------------------------------------------------------------------------------
-	
-	if wget --spider http://rpms.remirepo.net/enterprise/remi-release-7.rpm 2>/dev/null; then
-		echo -e "\nRepo *remi-release-7.rpm* is available procced ..."
-		wget http://rpms.remirepo.net/enterprise/remi-release-7.rpm
-	else
-		echo -e "\nRepo *remi-release-7.rpm* is not available. Exiting installer. Please contact script admin"
-		exit 1
-	fi
-	
-	#wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-	#wget http://rpms.remirepo.net/enterprise/remi-release-7.rpm
-	rpm -Uvh remi-release-7.rpm epel-release-latest-7.noarch.rpm
+		yum -y install centos-release-scl.noarch
+		yum -y install rh-php73*
+		# yum -y install sclo-php72-php-pecl*
 
-	# Install PHP 7.3 and update modules
-	
-	#yum -y install httpd mod_ssl php php-zip php-fpm php-devel php-gd php-imap php-ldap php-mysql php-odbc php-pear php-xml php-xmlrpc php-pecl-apc php-mbstring php-mcrypt php-soap php-tidy curl curl-devel perl-libwww-perl ImageMagick libxml2 libxml2-devel mod_fcgid php-cli httpd-devel php-fpm php-intl php-imagick php-pspell wget
-	
-	yum -y install yum-utils
-	yum-config-manager --enable remi-php73
-	yum -y update
-	yum -y install php php-zip php-mysql php-mcrypt
+		PHP_INI_PATH="/etc/opt/rh/rh-php73/php.ini"
+		PHP_EXT_PATH="/etc/opt/rh/rh-php73/php.d"
+
+
+		# set php and php-fpm
+		alternatives --install /usr/bin/php php /opt/rh/rh-php73/root/usr/bin/php 1
+		cp /usr/lib/systemd/system/rh-php73-php-fpm.service /usr/lib/systemd/system/php-fpm.service	
+
 	
 	
 	## Setup PHP 7.3 new PHP.INI file shipped with PHP and rename old PHP.INI
 	file="/etc/php.ini.OLD"
 	if [ ! -f "$file" ]; then
 		mv /etc/php.ini /etc/php.ini.OLD
-		cp -r /etc/php.ini.rpmnew /etc/php.ini
+		
 	fi
 	
 	# Pass php.ini.OLD Date.timezone over to new PHP.ini
 	TIMEZONE=$(cat /etc/php.ini.OLD | grep "date.timezone =" | sed -s "s|.*date.timezone \= '\(.*\)';.*|\1|")
-	sed -i 's|;date.timezone =|'"$TIMEZONE"'|g' /etc/php.ini
+	sed -i 's|;date.timezone =|'"$TIMEZONE"'|g' $PHP_INI_PATH
 	
 	# Fix missing php.ini settings sentora needs
 	echo -e "\nFix missing php.ini settings sentora needs in CentOS 7.x php 7.3 ..."
 	echo "setting upload_tmp_dir = /var/sentora/temp/"
 	echo ""
-	sed -i 's|;upload_tmp_dir =|upload_tmp_dir = /var/sentora/temp/|g' /etc/php.ini
+	sed -i 's|;upload_tmp_dir =|upload_tmp_dir = /var/sentora/temp/|g' $PHP_INI_PATH
 	echo "Setting session.save_path = /var/sentora/sessions"
-	sed -i 's|;session.save_path = "/tmp"|session.save_path = "/var/sentora/sessions"|g' /etc/php.ini
+	sed -i 's|;session.save_path = "/tmp"|session.save_path = "/var/sentora/sessions"|g' $PHP_INI_PATH
 	
 	# Curl CERT Setup in PHP.ini files
 	echo -e "\nSetting up PHP.ini curl CERT..."
 	wget https://curl.haxx.se/ca/cacert.pem
 	mkdir -p /etc/php.d/curl_cert
 	mv cacert.pem /etc/php.d/curl_cert/cacert.pem
-	sed -i 's|;curl.cainfo =|curl.cainfo = "/etc/php.d/curl_cert/cacert.pem"|g' /etc/php.ini
-	sed -i 's|;openssl.cafile=|openssl.cafile = "/etc/php.d/curl_cert/cacert.pem"|g' /etc/php.ini	
+	sed -i 's|;curl.cainfo =|curl.cainfo = "/etc/php.d/curl_cert/cacert.pem"|g' $PHP_INI_PATH
+	sed -i 's|;openssl.cafile=|openssl.cafile = "/etc/php.d/curl_cert/cacert.pem"|g' $PHP_INI_PATH	
 	
-	# Install php-fpm
-	#yum -y install php-fpm
 	
 	# Create CGI Scripts
 	#....
 	
 	# Install git
 	yum -y install git
-	
+	# start php-fpm service
+	systemctl enable php-fpm.service
+	systemctl start php-fpm.service
+	systemctl status php-fpm.service
+	semanage port -a -t http_port_t -p tcp 9000	
 	# Restart Apache
 	systemctl restart httpd
 	
@@ -386,12 +379,12 @@ fi
 
 	echo -e "\nDetected PHP: $PHPVER "
 
-	if  [[ "$PHPVER" = "7.3" ]]; then
-    	echo -e "\nPHP 7.3 installed. Procced installing ..."
-	else
-		echo -e "\nPHP 7.3 not installed. Exiting installer. Please contact script admin"
-		exit 1
-	fi
+#	if  [[ "$PHPVER" = "7.3" ]]; then
+#    	echo -e "\nPHP 7.3 installed. Procced installing ..."
+#	else
+#		echo -e "\nPHP 7.3 not installed. Exiting installer. Please contact script admin"
+#		exit 1
+#	fi
 	
 	# -------------------------------------------------------------------------------
 	# Start Snuffleupagus install Below
@@ -572,10 +565,42 @@ fi
 	# -------------------------------------------------------------------------------
 	# FAIL2BAN Below
 	# -------------------------------------------------------------------------------
-	
-	# Install Fail2ban (will add full code later) for now use my github repo code.
-	echo -e "\nInstalling Fail2ban ...\n"
-	bash <(curl -L -Ss http://zppy-repo.dukecitysolutions.com/repo/fail2ban/sentora-fail2ban.sh)
+
+		yum -y install epel-release
+		# yum -y update
+		yum -y install firewalld fail2ban-firewalld
+
+		if [ ! -f /etc/fail2ban/jail.local ] ; then
+		cat > /etc/fail2ban/jail.local <<-EOF
+		[DEFAULT]
+		bantime = 3600
+		[sshd]
+		enabled = true
+		EOF
+		fi
+
+		systemctl start firewalld
+		systemctl enable firewalld
+		# uncoment needed ports open
+			firewall-cmd --permanent --zone=public --add-port=22/tcp
+			#firewall-cmd --permanent --zone=public --add-port=21/tcp
+			firewall-cmd --permanent --zone=public --add-port=25/tcp
+			firewall-cmd --permanent --zone=public --add-port=80/tcp
+			firewall-cmd --permanent --zone=public --add-port=110/tcp
+			firewall-cmd --permanent --zone=public --add-port=143/tcp
+			firewall-cmd --permanent --zone=public --add-port=443/tcp
+			firewall-cmd --permanent --zone=public --add-port=587/tcp
+			firewall-cmd --permanent --zone=public --add-port=993/tcp
+			firewall-cmd --permanent --zone=public --add-port=995/tcp
+			firewall-cmd --permanent --zone=public --add-port=3306/tcp
+			firewall-cmd --permanent --zone=public --add-service=http
+			firewall-cmd --permanent --zone=public --add-service=https 
+		firewall-cmd --reload
+		systemctl start fail2ban
+		systemctl enable fail2ban
+		systemctl status fail2ban
+
+		firewall-cmd --direct --get-all-rules
 	
 	# -------------------------------------------------------------------------------
 	# MYSQL Below
